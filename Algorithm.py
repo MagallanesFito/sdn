@@ -1,15 +1,32 @@
 #biblioteca de grafos
 #Grafo de prueba
-#G = [(1,2),(2,1),(1,3),(3,1),(3,4),(4,3),(2,4),(4,2),(1,4),(4,1)]
+G = [(1,2),(2,1),(1,3),(3,1),(3,4),(4,3),(2,4),(4,2),(1,4),(4,1)]
 #G  = [(1, 2), (2, 1), (3, 2), (2, 3)]
 
 class GraphAlgoritm:
         def __init__(self,g):
+            #Representacion en lista de adyacencia
             self.adjency_list = self.buildAdjencyList(g)
             self.all_paths_list = [] 
+            #numero de nodos del grafo
+            self.V = self.getNumNodes(g)
+            #Representacion en matriz de adyacencia
+            self.adjency_matrix = self.adjency_list_to_matrix()
+            self.INF = 1000000
         ''' getter de array de todas las rutas'''
         def get_all_paths(self):
             return self.all_paths_list
+        def adjency_list_to_matrix(self):
+            matrix = [[self.INF for i in range(self.V)] for j in range(self.V)]
+            for key,value in self.adjency_list.items():
+                for node in value:
+                    matrix[key-1][node-1] = 1
+            return matrix
+        def print_adjcency_matrix(self):
+            for i in range(self.V):
+                for j in range(self.V):
+                    print(str(self.adjency_matrix[i][j])+" ",end='')
+                print("\n")
         def getNumNodes(self,g):
                 max_ = 0
                 for e in g:
@@ -65,8 +82,25 @@ class GraphAlgoritm:
             #adjency_list = self.buildAdjencyList(g)
             self.all_paths_util(src,dest,visited,path)
             return self.all_paths_list
-
-#algo  = GraphAlgoritm(G)
+        ''' Realiza el algoritmo de floyd warshall para 
+        obtener una matriz de rutas mas cortas en O(V^3)'''
+        def all_pair_shortest_path(self):
+            self.distances = map(lambda i:map(lambda j:j,i),self.adjency_matrix)
+            
+            for k in range(self.V):
+                for i in range(self.V):
+                    for j in range(self.V):
+                        self.distances[i][j] = min(self.distances[i][j],self.distances[i][k]+self.distances[k][j])
+            #Imprime solucion
+            for i in range(self.V):
+                for j in range(self.V):
+                    if self.distances[i][j] == self.INF:
+                        print("INF ",end='')
+                    else: 
+                        print(str(self.distances[i][j])+" ",end='')
+                print("\n")
+algo  = GraphAlgoritm(G)
+algo.all_pair_shortest_path()
 #src = 1
 #dest = 4
 

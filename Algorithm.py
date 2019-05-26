@@ -1,7 +1,5 @@
 #biblioteca de grafos
-#Grafo de prueba
-G = [(1,2),(2,1),(1,3),(3,1),(3,4),(4,3),(2,4),(4,2),(1,4),(4,1)]
-#G  = [(1, 2), (2, 1), (3, 2), (2, 3)]
+
 INF = (2<<32)
 class GraphAlgorithm:
         def __init__(self,g):
@@ -59,7 +57,7 @@ class GraphAlgorithm:
             queue = []
             queue.append([src])
             visited = set()
-            #adjency_list = self.buildAdjencyList(g)
+            
             while queue:
                 path= queue.pop(0)
                 node = path[-1]
@@ -77,7 +75,6 @@ class GraphAlgorithm:
             path.append(src)
             
             if src == dest:
-                #print(path)
                 self.all_paths_list.append(path[:])
             else:
                 for adjacent in self.adjency_list.get(src,[]):
@@ -88,7 +85,7 @@ class GraphAlgorithm:
         def all_paths(self,src,dest):
             visited = set()
             path = []
-            #adjency_list = self.buildAdjencyList(g)
+            
             self.all_paths_util(src,dest,visited,path)
             return self.all_paths_list
         ''' Funcion auxiliar para imprimir una matriz de distancias
@@ -119,12 +116,3 @@ class GraphAlgorithm:
             #Imprime solucion
             #self.print_solution(self.distances)
             return distances
-            
-#algo  = GraphAlgorithm(G)
-#distances = algo.all_pairs_shortest_path()
-#print(distances)
-#src = 1
-#dest = 4
-
-#print(algo.all_paths(src,dest))
-#print("La ruta mas corta desde %d hacia %d es %d "%(src,dest,best_dist))

@@ -2,6 +2,9 @@
 
 INF = (2<<32)
 class GraphAlgorithm:
+	'''El constructor recibe como parametro un grafo representado 
+	como una lista de aristas, de la siguiente forma: 
+	[(origen1,destino1),(origen2,destino2),(origen3,destino3)...]'''
         def __init__(self,g):
             #Representacion en lista de adyacencia
             self.adjency_list = self.build_adjency_list(g)

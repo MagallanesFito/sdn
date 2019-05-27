@@ -1,6 +1,6 @@
-# Network Algorithms
+# SDN Algorithms
 
-Network algorithms for sdn using opendaylight controller
+Software defined network algorithms using opendaylight controller
 
 # Instructions 
 

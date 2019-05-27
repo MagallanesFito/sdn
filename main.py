@@ -3,17 +3,10 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-import unicodedata
-from subprocess import Popen, PIPE
-import time
-#import networkx as nx
-from sys import exit
+from GraphAlgorithm import GraphAlgorithm
 
 ''' un grafo de aristas de la forma (origen,destino)'''
-switch = {}
-deviceMAC = {}
-deviceIP = {}
-hostPorts = {}
+linkPorts = {}
 ''' Metodo para obtener la informacion 
 codificada como json'''
 def getResponse(url):
@@ -27,87 +20,74 @@ def getResponse(url):
                 print("No se ha obtenido informacion")
                 response.raise_for_status()
                 return None
-'''def calculateCost(data):
+def calculateCost(data,rate):
         cost = 0
-
-        for i in data["node-connector"]:
-                transmitted = i["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["transmitted"]
-                transmitted = int(transmitted)
-                received = i["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["received"]
-                received = int(received)
-                rate  = transmitted+receivd
-
-        for i in data["node-connector"]:
-                transmitted = i["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["transmitted"]
-                transmitted = int(transmitted)
-                received = i["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["received"]
-                received = int(received)
-                cost = transmitted+received 
-        return cost'''
+        if rate=='tx':
+                transmitted = int(data["node-connector"][0]["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["transm$
+                cost  = transmitted
+        elif rate=='rx':
+                received  = int(data["node-connector"][0]["opendaylight-port-statistics:flow-capable-node-connector-statistics"]["packets"]["received$
+                cost  = received
+        return cost
 def createGraph(data):
         G = []
-        #Obtener informacion de MAC e ip
-        for i in data["network-topology"]["topology"]:
-                for j in i["node"]:
-                        if "host-tracker-service:addresses" in j:
-                                for k in j["host-tracker-service:addresses"]:
-                                        ip = k["ip"].encode('ascii','ignore')
-                                        mac = k["mac"].encode('ascii','ignore')
-                                        deviceMAC[ip]  = mac
-                                        deviceIP[mac] = ip
-                        if "host-tracker-service:attachment-points" in j:
-                                for k in j["host-tracker-service:attachment-points"]:
-                                        mac = k["corresponding-tp"].encode('ascii','ignore')
-                                        mac = mac.split(":",1)[1]
-                                        ip = deviceIP[mac]
-                                        temp = k["tp-id"].encode('ascii','ignore')
-                                        switchID = temp.split(":")
-                                        port = switchID[2]
-                                        hostPorts[ip] = port
-                                        switchID = switchID[0]+":"+switchID[1]
-                                        switch[ip] = switchID
         #Construye el grafo de la red
-        print("Construyendo grafo de red.....")
         for stat in data["network-topology"]["topology"]:
                 for link in stat["link"]:
                         if "host" not in link["link-id"]:
                                 src = link["link-id"].encode('ascii','ignore').split(":")
-                                #srcPort = src[2]
+                                srcPort = src[2]
                                 dst = link["destination"]["dest-tp"].encode('ascii','ignore').split(":")
-                                #dstPort = dst[2]
+                                dstPort = dst[2]
                                 srcToDst = src[1] + "::" + dst[1]
-                                #linkPorts[srcToDst] = srcPort + "::" + dstPort
+                                linkPorts[srcToDst] = srcPort+"::"+dstPort
                                 src_dest_tuple = ((int)(src[1]),(int)(dst[1]))
                                 G.append(src_dest_tuple)
 
         #Regresa el grafo
         return G
-        #imprime el grafo
-        #print("Grafo.................")
-        #print(G)
-        #print("Origen--------")
-        #s = "10.0.0.1"
-        #d = "10.0.0.3"
-        #origen = int(switch[s].split(":",1)[1])
-        #print(origen)
-        #print("Destino--------")
-        #destino = int(switch[d].split(":",1)[1])
-        #print(destino)
-        '''Mapeo de ip : mac
-        print("Device IP y mac.......")
-        print(deviceMAC)
-        switch a dispositivo
-        print("switch: device mapping")
-        print(switch)'''
-#Main
+#Main---------------------------------------------------
 
-print("Inicia el programa principal")
 port = "8181"
 host = "http://192.168.56.101"
 operations =[ "/restconf/operational/network-topology:network-topology","/restconf/config/1"]
 url =  host+":"+port+operations[0]
-#print(url)
+
 res = getResponse(url)
 if res != None:
         grafo = createGraph(res)
+print("Grafo construido")
 print(grafo)
+#-------------------------------------------------
+'''Ejemplo, crear una instancia de GraphAlgorithm para obtener todas las rutas desde h1 a h2 
+y para cada una de las rutas obtener el tx rate
+'''
+algo = GraphAlgorithm(grafo)
+#Origen
+h1 = 1
+#Destino
+h2 = 3
+#Obtener todas las rutas
+all_paths = algo.all_paths(h1,h2)
+
+#Itera por todas las rutas
+i = 0
+
+type_rate = 'tx'
+for path in all_paths:
+        print("ruta: "+str(i))
+        for node in range(len(path)):
+                if node == len(path)-1:
+                        curr_key = str(path[node])+"::"+str(path[node-1])
+                else:
+                        curr_key = str(path[node])+"::"+str(path[node+1])
+                curr_port = linkPorts[curr_key]
+                curr_port = str(curr_port.split(":",1)[0])
+                current_node = str(path[node])
+                curr_url = "http://192.168.56.101:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:"+current_node+"/node-connecto$
+                res = getResponse(curr_url)
+                #Calcula el tx del i-esimo nodo
+                mycost = calculateCost(res,type_rate)
+                print("\t nodo: "+current_node+"------ "+type_rate+" rate: "+str(mycost))
+        i = i+1
+

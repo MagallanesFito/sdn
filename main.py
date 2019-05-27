@@ -84,7 +84,8 @@ for path in all_paths:
                 curr_port = linkPorts[curr_key]
                 curr_port = str(curr_port.split(":",1)[0])
                 current_node = str(path[node])
-                curr_url = "http://192.168.56.101:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:"+current_node+"/node-connecto$
+                curr_url = "http://192.168.56.101:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:"\
+                +current_node+"/node-connector/openflow:"+current_node+":"+curr_port
                 res = getResponse(curr_url)
                 #Calcula el tx del i-esimo nodo
                 mycost = calculateCost(res,type_rate)
